@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML CookBook</title>
+    
+    <script>
+    window.MathJax = {
+      tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+      svg: { fontCache: 'global' },
+      startup: {
+        typeset: false // 我们手动调用渲染
+      }
+    };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            /* 深色模式变量 (默认) */
+            --bg-body: #0f172a;
+            --bg-sidebar: #1e293b;
+            --bg-card: #1e293b;
+            --text-main: #f1f5f9;
+            --text-sub: #94a3b8;
+            --accent: #38bdf8;
+            --border: #334155;
+            --code-bg: #020617;
+            --math-bg: rgba(0,0,0,0.2);
+            
+            /* 绘图颜色 */
+            --chart-grid: #334155;
+            --chart-line: #38bdf8;
+            --chart-bg: #020617;
+        }
+
+        [data-theme="light"] {
+            /* 浅色模式变量 */
+            --bg-body: #f1f5f9;
+            --bg-sidebar: #ffffff;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --accent: #4f46e5;
+            --border: #e2e8f0;
+            --code-bg: #f8fafc;
+            --math-bg: #f1f5f9;
+
+            /* 绘图颜色 */
+            --chart-grid: #cbd5e1;
+            --chart-line: #4f46e5;
+            --chart-bg: #ffffff;
+        }
+
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: var(--bg-body); color: var(--text-main); margin: 0; display: flex; height: 100vh; overflow: hidden; transition: background 0.3s, color 0.3s; }
+
+        /* Sidebar */
+        nav { width: 260px; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; transition: background 0.3s; }
+        .nav-header { padding: 20px; border-bottom: 1px solid var(--border); }
+        .nav-header h1 { margin: 0; font-size: 1.2rem; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+        
+        .nav-content { flex-grow: 1; overflow-y: auto; padding-top: 10px; }
+        .nav-group-title { padding: 15px 20px 5px; font-size: 0.75rem; color: var(--text-sub); text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
+        
+        .nav-item { padding: 10px 20px; cursor: pointer; border-left: 3px solid transparent; color: var(--text-sub); transition: 0.2s; font-size: 0.9rem; }
+        .nav-item:hover { background: rgba(128,128,128,0.05); color: var(--text-main); }
+        .nav-item.active { border-left-color: var(--accent); background: rgba(var(--accent), 0.1); color: var(--text-main); font-weight: 600; }
+
+        .author-tag { padding: 20px; font-size: 0.8rem; color: var(--text-sub); border-top: 1px solid var(--border); text-align: center; }
+
+        /* Main Content */
+        main { flex-grow: 1; display: flex; flex-direction: column; overflow-y: auto; position: relative; }
+        
+        .header-bar { padding: 15px 30px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--bg-body); position: sticky; top: 0; z-index: 10; }
+        .theme-btn { background: transparent; border: 1px solid var(--border); color: var(--text-main); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; transition: 0.2s; }
+        .theme-btn:hover { background: rgba(128,128,128,0.1); }
+
+        .content-container { padding: 30px; max-width: 1000px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+        
+        h2 { border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-top: 0; color: var(--accent); }
+        h3 { margin-top: 25px; font-size: 1.1rem; }
+        p { line-height: 1.6; }
+
+        .concept-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        
+        /* Cards */
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 20px; display: flex; flex-direction: column; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: background 0.3s; }
+        
+        .canvas-box { height: 250px; background: var(--chart-bg); border-radius: 6px; border: 1px solid var(--border); position: relative; margin-bottom: 10px; overflow: hidden; transition: background 0.3s; }
+        canvas { width: 100%; height: 100%; display: block; }
+        
+        /* Math & Code */
+        .math-box { background: var(--math-bg); padding: 15px; border-radius: 6px; overflow-x: auto; margin: 15px 0; border-left: 3px solid var(--accent); color: var(--text-main); transition: background 0.3s; }
+        
+        pre { background: var(--code-bg); padding: 15px; border-radius: 6px; overflow-x: auto; color: #a5b4fc; font-family: monospace; border: 1px solid var(--border); font-size: 0.9rem; transition: background 0.3s; }
+        /* 浅色模式下代码块稍微深一点对比度 */
+        [data-theme="light"] pre { background: #1e293b; color: #e2e8f0; }
+
+        /* Controls */
+        .controls { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; flex-wrap: wrap; }
+        button.action { background: var(--accent); color: #fff; border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button.action:hover { opacity: 0.9; transform: translateY(-1px); }
+        button.secondary { background: transparent; border: 1px solid var(--border); color: var(--text-sub); padding: 8px 16px; border-radius: 4px; cursor: pointer; }
+        
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; margin-left: auto; }
+        .status-good { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+        .status-bad { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        
+        .legend { display: flex; gap: 15px; font-size: 0.8rem; color: var(--text-sub); margin-bottom: 5px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-header">
+        <h1>🎓 ML Concept Lab</h1>
+    </div>
+
+    <div class="nav-content">
+        <div class="nav-group-title">必修：核心概念</div>
+        <div class="nav-item active" onclick="loadPage('concept_loss')">📉 损失与过拟合 (Loss)</div>
+        <div class="nav-item" onclick="loadPage('concept_reg')">🛡️ 正则化 (Regularization)</div>
+
+        <div class="nav-group-title">图鉴：监督学习</div>
+        <div class="nav-item" onclick="loadPage('sup_reg')">📏 回归家族 (Regression)</div>
+        <div class="nav-item" onclick="loadPage('sup_cls')">🏷️ 分类家族 (Classification)</div>
+        
+        <div class="nav-group-title">图鉴：深度学习</div>
+        <div class="nav-item" onclick="loadPage('dl_nn')">🧠 神经网络 (Deep Learning)</div>
+        <div class="nav-item" onclick="loadPage('dl_trans')">⚡ Transformer</div>
+    </div>
+
+    <div class="author-tag">
+        由 <b>Karcen Zheng</b> 制作<br>联系我
+    </div>
+</nav>
+
+<main id="mainContent">
+    <div class="header-bar">
+        <div id="pageTitle" style="font-weight:bold; font-size:1.1rem; color:var(--text-main)"></div>
+        <button class="theme-btn" onclick="toggleTheme()">🌗 切换主题</button>
+    </div>
+
+    <div id="dynamicContent">
+        </div>
+</main>
+
+<script>
+// ==========================================
+// 1. 页面内容数据 (修复了公式)
+// ==========================================
+const pages = {
+    // --- 核心教学：Loss & Overfitting ---
+    'concept_loss': {
+        title: '训练的核心：损失函数与过拟合',
+        content: `
+            <div class="controls">
+                <button class="action" onclick="sim.startTraining()">▶ 开始训练 (Start Epochs)</button>
+                <button class="secondary" onclick="sim.reset()">🔄 重置</button>
+                <div class="status-badge" id="trainStatus">状态: 未开始</div>
+            </div>
+
+            <div class="concept-grid">
+                <div class="card">
+                    <div class="legend">
+                        <span><span class="dot" style="background:var(--text-main)"></span>真实数据</span>
+                        <span><span class="dot" style="background:var(--accent)"></span>模型预测</span>
+                    </div>
+                    <div class="canvas-box"><canvas id="fitCanvas"></canvas></div>
+                    <p style="font-size:0.9rem; color:var(--text-sub)">
+                        左图展示模型试图画线穿过数据点。
+                        <br>注意观察：当线变得<b>过于扭曲</b>去迎合每个点时，就发生了<b>过拟合</b>。
+                    </p>
+                </div>
+
+                <div class="card">
+                    <div class="legend">
+                        <span><span class="dot" style="background:#22c55e"></span>Train Loss (训练误差)</span>
+                        <span><span class="dot" style="background:#ef4444"></span>Val Loss (考试误差)</span>
+                    </div>
+                    <div class="canvas-box"><canvas id="lossCanvas"></canvas></div>
+                    <p style="font-size:0.9rem; color:var(--text-sub)">
+                        <b>Loss (损失)</b>：越低越好。
+                        <br>🟢 <b>Train Loss</b>: 平时练习册的错误率。
+                        <br>🔴 <b>Val Loss</b>: 期末考试的错误率。
+                        <br>⚠️ <b>警报</b>: 当绿线下降但红线<b>反弹上升</b>时，说明模型在“死记硬背”(Overfitting)！
+                    </p>
+                </div>
+            </div>
+
+            <h3>💡 核心数学公式</h3>
+            <div class="math-box">
+                <b>均方误差 (MSE) Loss Function:</b><br>
+                $$ J(\\theta) = \\frac{1}{m} \\sum_{i=1}^{m} (y^{(i)} - \\hat{y}^{(i)})^2 $$
+            </div>
+        `,
+        init: () => sim.init()
+    },
+
+    // --- 核心教学：Regularization ---
+    'concept_reg': {
+        title: '防止过拟合：正则化 (Regularization)',
+        content: `
+            <p>当模型太“聪明”以至于把噪声都记住了，我们需要给它加个<b>“紧箍咒”</b>，这就是正则化。</p>
+            
+            <div class="card" style="margin-bottom:20px;">
+                <div class="controls">
+                    <label>模型复杂度: <input type="range" id="regDegree" min="1" max="15" value="12" oninput="regSim.update()"></label>
+                </div>
+                <div class="controls">
+                    <label>正则化强度 (Lambda $\\lambda$): <input type="range" id="regLambda" min="0" max="100" value="0" oninput="regSim.update()"></label>
+                    <span id="lambdaVal" style="width:120px; font-weight:bold; color:var(--accent)">0 (无正则化)</span>
+                </div>
+                <div class="canvas-box" style="height:300px;"><canvas id="regCanvas"></canvas></div>
+            </div>
+
+            <div class="math-box">
+                <b>带正则化的损失函数 (Ridge Regression):</b><br>
+                $$ J(\\theta) = \\underbrace{MSE(\\theta)}_{让预测更准} + \\underbrace{\\lambda \\sum \\theta_j^2}_{让线更平滑} $$
+            </div>
+        `,
+        init: () => regSim.init()
+    },
+
+    // --- 图鉴：监督学习 ---
+    'sup_reg': {
+        title: '回归家族 (Regression Models)',
+        content: `
+            <div class="concept-grid">
+                <div class="card">
+                    <h3>1. 线性回归 (Linear Regression)</h3>
+                    <p>假设世界是线性的。最基础的预测模型。</p>
+                    <div class="math-box">$$ y = wx + b $$</div>
+                    <pre>from sklearn.linear_model import LinearRegression</pre>
+                </div>
+                <div class="card">
+                    <h3>2. 岭回归 (Ridge / L2)</h3>
+                    <p>为了防止系数 $w$ 太大，在 Loss 中加入了平方惩罚项。</p>
+                    <div class="math-box">$$ Loss + \\lambda ||w||^2 $$</div>
+                    <pre>from sklearn.linear_model import Ridge</pre>
+                </div>
+            </div>
+        `
+    },
+    'sup_cls': {
+        title: '分类家族 (Classification Models)',
+        content: `
+             <div class="concept-grid">
+                <div class="card">
+                    <h3>3. 逻辑回归 (Logistic Regression)</h3>
+                    <p>虽然叫回归，其实是分类。核心是 Sigmoid 函数，将数值压缩到 0-1 的概率区间。</p>
+                    <div class="math-box">$$ P(y=1) = \\frac{1}{1+e^{-z}} $$</div>
+                    <pre>from sklearn.linear_model import LogisticRegression</pre>
+                </div>
+                <div class="card">
+                    <h3>4. 支持向量机 (SVM)</h3>
+                    <p>寻找最宽的“马路”（最大间隔）把两类数据分开。只有边缘上的点（支持向量）才重要。</p>
+                    <div class="math-box">$$ \\min \\frac{1}{2}||w||^2 \\quad s.t. \\ y_i(w^T x_i + b) \\ge 1 $$</div>
+                    <pre>from sklearn.svm import SVC</pre>
+                </div>
+            </div>
+        `
+    },
+    'dl_nn': {
+        title: '深度学习 (Deep Learning)',
+        content: `
+            <div class="concept-grid">
+                <div class="card">
+                    <h3>MLP (多层感知机)</h3>
+                    <p>最经典的神经网络。全连接结构，利用反向传播算法更新权重。</p>
+                    <div class="math-box">$$ a^{[l]} = \\sigma(W^{[l]}a^{[l-1]} + b^{[l]}) $$</div>
+                    <pre>model = MLPClassifier(hidden_layer_sizes=(100,))</pre>
+                </div>
+                <div class="card">
+                    <h3>CNN (卷积神经网络)</h3>
+                    <p>计算机视觉的核心。利用“卷积核”扫描图片提取特征。</p>
+                    <div class="math-box">$$ S(i, j) = (I * K)(i, j) = \\sum_m \\sum_n I(m, n) K(i-m, j-n) $$</div>
+                </div>
+            </div>
+        `
+    },
+    'dl_trans': {
+        title: 'Transformer (The Core of LLMs)',
+        content: `
+            <div class="card">
+                <h3>Attention Is All You Need</h3>
+                <p>Transformer 抛弃了循环结构，完全依赖注意力机制。它是 ChatGPT 等大语言模型的基石。</p>
+                <p>核心公式是 <b>Scaled Dot-Product Attention</b>：</p>
+                
+                <div class="math-box">
+                    $$ \\text{Attention}(Q, K, V) = \\text{softmax}\\left(\\frac{QK^T}{\\sqrt{d_k}}\\right)V $$
+                </div>
+                
+                <ul>
+                    <li><b>Q (Query)</b>: 你去图书馆查询的关键词。</li>
+                    <li><b>K (Key)</b>: 书脊上的标签。</li>
+                    <li><b>V (Value)</b>: 书里的内容。</li>
+                </ul>
+                <pre>import torch.nn as nn
+layer = nn.TransformerEncoderLayer(d_model=512, nhead=8)</pre>
+            </div>
+        `
+    }
+};
+
+// ==========================================
+// 2. 模拟器逻辑 (支持主题颜色切换)
+// ==========================================
+const sim = {
+    epoch: 0,
+    isTraining: false,
+    trainLoss: [],
+    valLoss: [],
+    data: [],
+    ctxFit: null,
+    ctxLoss: null,
+    animationId: null,
+
+    init: function() {
+        this.reset();
+        this.ctxFit = document.getElementById('fitCanvas').getContext('2d');
+        this.ctxLoss = document.getElementById('lossCanvas').getContext('2d');
+        this.draw();
+    },
+
+    reset: function() {
+        this.epoch = 0;
+        this.isTraining = false;
+        this.trainLoss = [];
+        this.valLoss = [];
+        if(this.animationId) cancelAnimationFrame(this.animationId);
+        
+        const el = document.getElementById('trainStatus');
+        if(el) {
+            el.innerText = "状态: 准备就绪";
+            el.className = "status-badge";
+        }
+        
+        // 生成带噪声的二次函数数据
+        this.data = [];
+        for(let x = -10; x <= 10; x+=1) {
+            this.data.push({
+                x: x, 
+                y: 0.5 * x * x + (Math.random() - 0.5) * 40 
+            });
+        }
+        if(this.ctxFit) this.draw();
+    },
+
+    startTraining: function() {
+        if(this.isTraining) return;
+        this.isTraining = true;
+        this.loop();
+    },
+
+    loop: function() {
+        if(!this.isTraining || this.epoch > 100) {
+            this.isTraining = false;
+            return;
+        }
+
+        this.epoch++;
+        
+        // 模拟 Loss 曲线
+        const baseCurve = Math.exp(-this.epoch * 0.05) * 100;
+        let tLoss, vLoss;
+        
+        if (this.epoch < 30) {
+            tLoss = baseCurve + Math.random()*5;
+            vLoss = baseCurve + 10 + Math.random()*5;
+            document.getElementById('trainStatus').innerText = "学习中...";
+            document.getElementById('trainStatus').className = "status-badge status-good";
+        } else {
+            // 过拟合阶段：Train Loss 继续降，Val Loss 升高
+            tLoss = baseCurve * 0.5 + Math.random()*2;
+            vLoss = (this.epoch - 30) * 1.5 + 20 + Math.random()*5;
+            document.getElementById('trainStatus').innerText = "⚠️ 过拟合 (Val Loss 上升)";
+            document.getElementById('trainStatus').className = "status-badge status-bad";
+        }
+
+        this.trainLoss.push(tLoss);
+        this.valLoss.push(vLoss);
+
+        this.draw();
+        this.animationId = requestAnimationFrame(() => this.loop());
+    },
+
+    draw: function() {
+        // 获取当前主题颜色
+        const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+        const c_bg = getComputedStyle(document.body).getPropertyValue('--chart-bg').trim();
+        const c_grid = getComputedStyle(document.body).getPropertyValue('--chart-grid').trim();
+        const c_line = getComputedStyle(document.body).getPropertyValue('--chart-line').trim();
+        const c_text = getComputedStyle(document.body).getPropertyValue('--text-main').trim();
+
+        // Fit Canvas
+        const ctx = this.ctxFit;
+        if(!ctx) return;
+        const w = ctx.canvas.width = ctx.canvas.parentElement.clientWidth;
+        const h = ctx.canvas.height = ctx.canvas.parentElement.clientHeight;
+
+        ctx.fillStyle = c_bg;
+        ctx.fillRect(0,0,w,h);
+        
+        // Draw Points
+        ctx.fillStyle = c_text;
+        this.data.forEach(p => {
+            const px = (p.x + 12) / 24 * w;
+            const py = h - (p.y + 20) / 140 * h;
+            ctx.beginPath(); ctx.arc(px, py, 3, 0, Math.PI*2); ctx.fill();
+        });
+
+        // Draw Line
+        ctx.strokeStyle = c_line;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        for(let x = -10; x <= 10; x+=0.5) {
+            const px = (x + 12) / 24 * w;
+            let py_val;
+            
+            if(this.epoch < 5) py_val = 50; 
+            else if (this.epoch < 30) py_val = 0.5 * x * x; 
+            else py_val = 0.5 * x * x + Math.sin(x*3 + this.epoch)*15 * (this.epoch/100); 
+            
+            const py = h - (py_val + 20) / 140 * h;
+            if(x===-10) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+
+        // Loss Canvas
+        const ctxL = this.ctxLoss;
+        const w2 = ctxL.canvas.width = ctxL.canvas.parentElement.clientWidth;
+        const h2 = ctxL.canvas.height = ctxL.canvas.parentElement.clientHeight;
+        
+        ctxL.fillStyle = c_bg;
+        ctxL.fillRect(0,0,w2,h2);
+        
+        ctxL.strokeStyle = c_grid; ctxL.lineWidth = 1;
+        ctxL.beginPath(); ctxL.moveTo(0, h2-20); ctxL.lineTo(w2, h2-20); ctxL.stroke();
+
+        const drawCurve = (data, color) => {
+            ctxL.strokeStyle = color;
+            ctxL.lineWidth = 2;
+            ctxL.beginPath();
+            data.forEach((val, i) => {
+                const x = (i / 100) * w2;
+                const y = h2 - 20 - (val / 150 * (h2-40));
+                if(i===0) ctxL.moveTo(x,y); else ctxL.lineTo(x,y);
+            });
+            ctxL.stroke();
+        };
+
+        if(this.trainLoss.length > 0) {
+            drawCurve(this.trainLoss, '#22c55e');
+            drawCurve(this.valLoss, '#ef4444');
+        }
+    }
+};
+
+const regSim = {
+    ctx: null,
+    points: [],
+    
+    init: function() {
+        this.ctx = document.getElementById('regCanvas').getContext('2d');
+        this.points = [];
+        for(let i=0; i<15; i++) {
+            this.points.push({x: i/14, y: 0.5 + (Math.random()-0.5)*0.4});
+        }
+        this.update();
+    },
+
+    update: function() {
+        const elDeg = document.getElementById('regDegree');
+        if(!elDeg) return;
+        const degree = parseInt(elDeg.value);
+        const lambda = parseInt(document.getElementById('regLambda').value);
+        document.getElementById('lambdaVal').innerText = lambda > 0 ? `λ = ${lambda}` : "0 (Overfit!)";
+
+        const ctx = this.ctx;
+        const w = ctx.canvas.width = ctx.canvas.parentElement.clientWidth;
+        const h = ctx.canvas.height = ctx.canvas.parentElement.clientHeight;
+
+        const c_bg = getComputedStyle(document.body).getPropertyValue('--chart-bg').trim();
+        const c_text = getComputedStyle(document.body).getPropertyValue('--text-main').trim();
+        
+        ctx.fillStyle = c_bg;
+        ctx.fillRect(0,0,w,h);
+
+        ctx.fillStyle = c_text;
+        this.points.forEach(p => {
+            ctx.beginPath(); ctx.arc(p.x * w, h - p.y * h, 4, 0, Math.PI*2); ctx.fill();
+        });
+
+        // 模拟正则化效果
+        ctx.strokeStyle = lambda > 50 ? '#22c55e' : (lambda > 10 ? '#38bdf8' : '#ef4444');
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+
+        for(let x=0; x<=1; x+=0.01) {
+            let y = 0.5; 
+            const smoothing = lambda / 100; 
+            
+            for(let i=0; i<this.points.length; i++) {
+                const p = this.points[i];
+                const dist = Math.abs(x - p.x);
+                // 正则化 lambda 越大，平滑因子越高，每个点的影响力被削弱
+                const influence = Math.exp(-dist*dist * (degree*10)); 
+                const dampener = 1 / (1 + smoothing * 10); 
+                y += (p.y - 0.5) * influence * dampener;
+            }
+
+            const px = x * w;
+            const py = h - y * h;
+            if(x===0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+    }
+};
+
+// ==========================================
+// 3. 页面路由与主题控制
+// ==========================================
+let currentPage = '';
+
+function loadPage(pageId) {
+    currentPage = pageId;
+    const page = pages[pageId] || pages['concept_loss'];
+    
+    // UI Update
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    const navItems = Array.from(document.querySelectorAll('.nav-item'));
+    const target = navItems.find(el => el.getAttribute('onclick').includes(pageId));
+    if(target) target.classList.add('active');
+
+    // Header
+    document.getElementById('pageTitle').innerText = page.title;
+
+    // Content
+    const contentDiv = document.getElementById('dynamicContent');
+    contentDiv.innerHTML = `
+        <div class="content-container">
+            ${page.content}
+            <div style="height:50px;"></div>
+        </div>
+    `;
+
+    // Formula Render (Important for MathJax)
+    if(window.MathJax) {
+        MathJax.typesetPromise().catch(err => console.log(err));
+    }
+
+    // Init Sim
+    if(page.init) {
+        setTimeout(page.init, 50);
+    } else {
+        sim.isTraining = false;
+    }
+}
+
+function toggleTheme() {
+    const html = document.documentElement;
+    const current = html.getAttribute('data-theme');
+    const newTheme = current === 'light' ? 'dark' : 'light';
+    html.setAttribute('data-theme', newTheme);
+    
+    // Redraw active canvas to match new theme
+    if(currentPage === 'concept_loss') sim.draw();
+    if(currentPage === 'concept_reg') regSim.update();
+}
+
+// Start
+window.onload = () => loadPage('concept_loss');
+window.onresize = () => {
+    if(currentPage === 'concept_loss') sim.draw();
+    if(currentPage === 'concept_reg') regSim.update();
+};
+
+</script>
+</body>
+</html>
