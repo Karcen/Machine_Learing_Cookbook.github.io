@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-theme="light"> <head>
+<html lang="zh-CN" data-theme="light">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Machine Learning Cookbook</title>
@@ -15,711 +16,575 @@
 
     <style>
         :root {
-            /* 浅色模式 (默认) */
+            /* Light Mode */
             --bg-body: #f8fafc;
             --bg-sidebar: #ffffff;
             --bg-card: #ffffff;
             --text-main: #0f172a;
             --text-sub: #64748b;
-            --accent: #4f46e5; /* Indigo */
+            --accent: #4f46e5;
             --border: #e2e8f0;
-            --code-bg: #1e293b; /* 代码块始终深色更好看 */
-            --math-bg: #f1f5f9;
             --chart-grid: #e2e8f0;
-            --chart-line: #4f46e5;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --code-bg: #1e293b;
         }
 
         [data-theme="dark"] {
-            /* 深色模式 */
             --bg-body: #0f172a;
             --bg-sidebar: #1e293b;
             --bg-card: #1e293b;
             --text-main: #f1f5f9;
             --text-sub: #94a3b8;
-            --accent: #38bdf8; /* Sky Blue */
+            --accent: #38bdf8;
             --border: #334155;
-            --code-bg: #020617;
-            --math-bg: rgba(0,0,0,0.2);
             --chart-grid: #334155;
-            --chart-line: #38bdf8;
+            --code-bg: #020617;
         }
 
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg-body); color: var(--text-main); margin: 0; display: flex; height: 100vh; overflow: hidden; transition: 0.3s; }
+        body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
 
-        /* Sidebar */
+        /* Navigation */
         nav { width: 260px; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
         .nav-header { padding: 20px; border-bottom: 1px solid var(--border); }
         .nav-header h1 { margin: 0; font-size: 1.2rem; color: var(--accent); font-weight: 800; }
-        .nav-content { overflow-y: auto; flex-grow: 1; padding-top: 10px; }
+        .nav-content { flex: 1; overflow-y: auto; padding-top: 10px; }
         
-        .nav-group { padding: 15px 20px 5px; font-size: 0.75rem; color: var(--text-sub); font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
-        .nav-item { padding: 10px 20px; cursor: pointer; border-left: 3px solid transparent; color: var(--text-sub); font-size: 0.9rem; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
+        .group-title { padding: 15px 20px 5px; font-size: 0.75rem; color: var(--text-sub); font-weight: bold; text-transform: uppercase; }
+        .nav-item { padding: 10px 20px; cursor: pointer; color: var(--text-sub); font-size: 0.9rem; border-left: 3px solid transparent; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
         .nav-item:hover { background: rgba(128,128,128,0.05); color: var(--text-main); }
         .nav-item.active { border-left-color: var(--accent); background: rgba(var(--accent), 0.1); color: var(--text-main); font-weight: 600; }
 
-        .author { padding: 15px; font-size: 0.8rem; text-align: center; color: var(--text-sub); border-top: 1px solid var(--border); }
+        /* Main Area */
+        main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .header { padding: 15px 30px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--bg-body); position: sticky; top: 0; z-index: 10; }
+        
+        .container { padding: 30px; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
 
-        /* Main */
-        main { flex-grow: 1; display: flex; flex-direction: column; overflow-y: auto; position: relative; }
-        .header-bar { padding: 15px 30px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--bg-body); position: sticky; top: 0; z-index: 10; }
-        .theme-btn { background: transparent; border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; cursor: pointer; color: var(--text-main); }
+        /* UI Elements */
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
+        
+        .canvas-box { background: var(--bg-body); border: 1px solid var(--border); border-radius: 8px; position: relative; overflow: hidden; cursor: crosshair; }
+        canvas { display: block; width: 100%; height: 100%; }
 
-        .container { padding: 30px; max-width: 1100px; margin: 0 auto; width: 100%; box-sizing: border-box; }
-        
-        /* Components */
-        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
-        
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        
-        .canvas-wrapper { height: 300px; background: var(--bg-body); border: 1px solid var(--border); border-radius: 8px; position: relative; overflow: hidden; cursor: crosshair; }
-        canvas { width: 100%; height: 100%; display: block; }
-        
-        .math-box { background: var(--math-bg); padding: 15px; border-radius: 6px; border-left: 4px solid var(--accent); margin: 15px 0; overflow-x: auto; }
-        pre { background: var(--code-bg); color: #a5b4fc; padding: 15px; border-radius: 6px; overflow-x: auto; font-family: monospace; font-size: 0.9rem; }
+        .controls { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 15px; align-items: center; background: rgba(128,128,128,0.03); padding: 10px; border-radius: 8px; }
+        button { padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; border: none; transition: 0.2s; }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+        .btn-outline:hover { background: rgba(128,128,128,0.05); }
 
-        /* Controls & Badges */
-        .controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; align-items: center; }
-        button.btn { background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.2s; }
-        button.btn:hover { opacity: 0.9; transform: translateY(-1px); }
-        button.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-sub); padding: 8px 16px; border-radius: 6px; cursor: pointer; }
-        
-        .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
-        .bg-green { background: rgba(34, 197, 94, 0.15); color: #16a34a; }
-        .bg-red { background: rgba(239, 68, 68, 0.15); color: #dc2626; }
-        .bg-gray { background: rgba(100,116,139, 0.15); color: #64748b; }
-
-        .legend { display: flex; gap: 15px; margin-bottom: 10px; font-size: 0.85rem; color: var(--text-sub); }
+        .math-box { background: rgba(128,128,128,0.05); padding: 15px; border-radius: 6px; border-left: 4px solid var(--accent); margin: 15px 0; overflow-x: auto; font-size: 0.95rem; }
+        .badge { padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+        .legend { display: flex; gap: 15px; font-size: 0.85rem; color: var(--text-sub); margin-bottom: 5px; }
         .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
 
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media(max-width:900px){ .grid-2 { grid-template-columns: 1fr; } }
+        
     </style>
 </head>
 <body>
 
 <nav>
     <div class="nav-header">
-        <h1>ML Visual Lab</h1>
+        <h1>🍳 ML Cookbook</h1>
     </div>
     <div class="nav-content">
-        <div class="nav-group">核心概念 (Core)</div>
-        <div class="nav-item active" onclick="router.load('concept_loss')">📉 损失与过拟合</div>
-        <div class="nav-item" onclick="router.load('concept_reg')">🛡️ 正则化</div>
+        <div class="group-title">核心原理 (Theory)</div>
+        <div class="nav-item active" onclick="router.load('theory_loss')">📉 Loss & 过拟合演示</div>
+        <div class="nav-item" onclick="router.load('theory_reg')">🛡️ 正则化与复杂度</div>
 
-        <div class="nav-group">交互实验室 (Interactive)</div>
-        <div class="nav-item" onclick="router.load('lab_linear')">📏 线性回归 (Linear)</div>
-        <div class="nav-item" onclick="router.load('lab_knn')">🔴 KNN 分类</div>
-        <div class="nav-item" onclick="router.load('lab_kmeans')">🧩 K-Means 聚类</div>
+        <div class="group-title">回归 (Regression)</div>
+        <div class="nav-item" onclick="router.load('reg_linear')">📏 简单线性回归</div>
+        <div class="nav-item" onclick="router.load('reg_poly')">🎢 外推灾难 (Extrapolation)</div>
+        <div class="nav-item" onclick="router.load('reg_vs')">⚔️ 线性 vs 非线性</div>
+
+        <div class="group-title">分类 (Classification)</div>
+        <div class="nav-item" onclick="router.load('cls_logistic')">🚀 逻辑回归 (梯度下降)</div>
+        <div class="nav-item" onclick="router.load('cls_knn')">🔴 KNN (K=2)</div>
+
+        <div class="group-title">聚类 (Clustering)</div>
+        <div class="nav-item" onclick="router.load('clu_kmeans')">🧩 K-Means</div>
     </div>
-    <div class="author">由 Karcen Zheng 制作</div>
 </nav>
 
 <main>
-    <div class="header-bar">
-        <h2 id="pageTitle" style="margin:0; font-size:1.1rem; color:var(--text-main)"></h2>
-        <button class="theme-btn" onclick="toggleTheme()">🌗 切换模式</button>
+    <div class="header">
+        <h2 id="pageTitle" style="margin:0; font-size:1.1rem;"></h2>
+        <button class="btn-outline" onclick="toggleTheme()">🌗 切换模式</button>
     </div>
     <div id="app" class="container"></div>
 </main>
 
 <script>
+
 // ==========================================
-// 1. 页面内容配置
+// 1. 页面内容
 // ==========================================
 const pages = {
-    // --- 1. Loss & Overfitting ---
-    'concept_loss': {
-        title: 'Loss Function & Overfitting',
+    // --- 1. Loss Animation ---
+    'theory_loss': {
+        title: '原理演示：Loss 曲线与过拟合',
         content: `
             <div class="card">
-                <p>这是机器学习中最重要的一课。观察模型在训练过程中，如何从“没学会”到“学会”，最后变成“死记硬背”。</p>
+                <p>点击开始，观察 <b>Train Loss (绿线)</b> 和 <b>Val Loss (红线)</b>。注意红线在后期如何<b>反弹</b>（过拟合）。</p>
                 <div class="controls">
-                    <button class="btn" onclick="simLoss.start()">▶ 开始训练</button>
-                    <button class="btn-outline" onclick="simLoss.step()">👣 单步执行</button>
+                    <button class="btn-primary" onclick="simLoss.start()">▶ 开始演示</button>
                     <button class="btn-outline" onclick="simLoss.reset()">🔄 重置</button>
-                    <div id="lossStatus" class="badge bg-gray" style="margin-left:auto;">Epoch: 0 | 等待开始</div>
+                    <span id="loss_badge" class="badge" style="margin-left:auto; background:#f1f5f9; color:#64748b">Epoch: 0</span>
                 </div>
-                
                 <div class="grid-2">
                     <div>
-                        <div class="legend">
-                            <span><span class="dot" style="background:var(--text-main)"></span>数据点</span>
-                            <span><span class="dot" style="background:var(--accent)"></span>模型拟合线</span>
-                        </div>
-                        <div class="canvas-wrapper"><canvas id="cvs_fit"></canvas></div>
+                        <div class="legend"><span><span class="dot" style="background:var(--text-main)"></span>数据点</span><span><span class="dot" style="background:var(--accent)"></span>拟合曲线</span></div>
+                        <div class="canvas-box" style="height:300px"><canvas id="cvs_loss_fit"></canvas></div>
                     </div>
                     <div>
-                        <div class="legend">
-                            <span><span class="dot" style="background:#22c55e"></span>Train Loss (练习题)</span>
-                            <span><span class="dot" style="background:#ef4444"></span>Val Loss (考试题)</span>
-                        </div>
-                        <div class="canvas-wrapper"><canvas id="cvs_loss"></canvas></div>
+                        <div class="legend"><span><span class="dot" style="background:var(--success)"></span>Train Loss</span><span><span class="dot" style="background:var(--danger)"></span>Val Loss</span></div>
+                        <div class="canvas-box" style="height:300px"><canvas id="cvs_loss_chart"></canvas></div>
                     </div>
                 </div>
             </div>
-
-            <div class="grid-2">
-                <div class="math-box">
-                    <b>Loss (均方误差):</b> $$ J(\\theta) = \\frac{1}{m} \\sum (y - \\hat{y})^2 $$
-                </div>
-                <div class="card" style="margin:0; padding:15px; font-size:0.9rem;">
-                    <b>💡 观察指南：</b><br>
-                    1. <b>前 20 轮</b>：绿线红线一起降（正常学习）。<br>
-                    2. <b>30 轮后</b>：绿线继续降，但红线<b>反弹</b>（过拟合）。<br>
-                    3. 左侧蓝线会变得极其扭曲，试图穿过所有噪声点。
-                </div>
+            <div class="math-box">
+                <b>Scale Note:</b> Loss 范围 0~100。Y轴自动缩放以适应此范围。
             </div>
         `,
         init: () => simLoss.init()
     },
 
     // --- 2. Regularization ---
-    'concept_reg': {
-        title: 'Regularization (正则化)',
+    'theory_reg': {
+        title: '原理实验：正则化 (Regularization)',
         content: `
             <div class="card">
-                <p>如何治愈过拟合？加一个“惩罚项”。拖动滑块，看正则化如何把扭曲的线“拉直”。</p>
+                <p>调节 <b>Lambda</b>，看它是如何惩罚模型的复杂度，把曲线“拉直”的。</p>
                 <div class="controls">
-                    <label>多项式次数 (复杂度): <input type="range" id="regDegree" min="1" max="15" value="12" oninput="simReg.draw()"></label>
+                    <div style="flex:1"><label>多项式次数: <input type="range" id="regDeg" min="1" max="15" value="12" oninput="simReg.update()"></label></div>
+                    <div style="flex:1"><label>Lambda ($\lambda$): <input type="range" id="regLam" min="0" max="100" value="0" oninput="simReg.update()"></label> <b id="lamVal" style="color:var(--accent)">0</b></div>
+                    <button class="btn-outline" onclick="simReg.gen()">🎲 新数据</button>
                 </div>
-                <div class="controls">
-                    <label>Lambda (惩罚力度 $\\lambda$): <input type="range" id="regLambda" min="0" max="100" value="0" oninput="simReg.draw()"></label>
-                    <span id="lambdaDisp" style="font-weight:bold; color:var(--accent); width:100px;">0 (无惩罚)</span>
-                </div>
-                <div class="canvas-wrapper" style="height:350px;"><canvas id="cvs_reg"></canvas></div>
-            </div>
-            <div class="math-box">
-                $$ J(\\theta) = Loss + \\underbrace{\\lambda \\sum \\theta_j^2}_{L2 正则化项} $$
+                <div class="canvas-box" style="height:400px"><canvas id="cvs_reg"></canvas></div>
             </div>
         `,
         init: () => simReg.init()
     },
 
-    // --- 3. Linear Regression (Interactive) ---
-    'lab_linear': {
-        title: 'Interactive Linear Regression',
+    // --- 3. Linear Regression ---
+    'reg_linear': {
+        title: '实验室：简单线性回归',
         content: `
             <div class="card">
                 <div class="controls">
-                    <span class="badge bg-green">操作指南</span>
-                    <span style="font-size:0.9rem; color:var(--text-sub)">在下方空白处<b>点击鼠标</b>添加数据点，模型会自动拟合直线。</span>
-                    <button class="btn-outline" style="margin-left:auto;" onclick="simLinear.clear()">🗑️ 清空画布</button>
+                    <span>点击画布添加数据点。</span>
+                    <button class="btn-outline" style="margin-left:auto" onclick="engLinear.reset()">🗑️ 清空</button>
                 </div>
-                <div class="canvas-wrapper" style="height:400px;" onmousedown="simLinear.addPoint(event)">
-                    <canvas id="cvs_linear"></canvas>
-                </div>
-            </div>
-            <div class="math-box">
-                最小二乘法解析解 (Closed Form): $$ w = (X^T X)^{-1} X^T y $$
+                <div class="canvas-box" style="height:400px" onmousedown="engLinear.add(event)"><canvas id="cvs_linear"></canvas></div>
             </div>
         `,
-        init: () => simLinear.init()
+        init: () => engLinear.init()
     },
 
-    // --- 4. KNN (Interactive) ---
-    'lab_knn': {
-        title: 'K-Nearest Neighbors (KNN)',
+    // --- 4. Poly Extrapolation ---
+    'reg_poly': {
+        title: '实验室：外推灾难 (Extrapolation)',
         content: `
             <div class="card">
+                <p>观察<b>阴影区域（未知区）</b>。当 Degree 很高时，模型在训练区很完美，但在外推区完全崩溃。</p>
                 <div class="controls">
-                    <span class="badge bg-green">操作指南</span>
-                    <span style="font-size:0.9rem; color:var(--text-sub)"><b>左键</b>添加红色类别，<b>右键</b>添加蓝色类别。</span>
-                    <label style="margin-left:20px;">K值: <input type="number" id="knnK" value="3" min="1" max="9" style="width:50px;" onchange="simKNN.draw()"></label>
-                    <button class="btn-outline" style="margin-left:auto;" onclick="simKNN.clear()">🗑️ 清空</button>
+                    <label>Degree: <b id="polyDegDisp" style="color:var(--accent)">1</b></label>
+                    <input type="range" id="polyDeg" min="1" max="15" value="1" style="flex:1" oninput="engPoly.update()">
+                    <button class="btn-outline" onclick="engPoly.gen()">🎲 重生成</button>
                 </div>
-                <div class="canvas-wrapper" style="height:400px;" onmousedown="simKNN.addPoint(event)" oncontextmenu="event.preventDefault(); simKNN.addPoint(event, 1)">
-                    <canvas id="cvs_knn"></canvas>
-                </div>
-                <p style="font-size:0.8rem; color:var(--text-sub); text-align:center;">背景颜色代表模型的决策边界 (Decision Boundary)</p>
+                <div class="canvas-box" style="height:400px"><canvas id="cvs_poly"></canvas></div>
             </div>
         `,
-        init: () => simKNN.init()
+        init: () => engPoly.init()
     },
 
-    // --- 5. K-Means (Interactive) ---
-    'lab_kmeans': {
-        title: 'K-Means Clustering',
+    // --- 5. Linear vs Non-Linear ---
+    'reg_vs': {
+        title: '实验室：线性 vs 非线性',
         content: `
             <div class="card">
                 <div class="controls">
-                    <span class="badge bg-green">步骤 1</span>
-                    <span>点击画布添加数据点</span>
-                    <span class="badge bg-red" style="margin-left:10px;">步骤 2</span>
-                    <span>点击“迭代”按钮</span>
-                    
-                    <button class="btn" style="margin-left:auto;" onclick="simKMeans.step()">👣 迭代一步 (Step)</button>
-                    <button class="btn-outline" onclick="simKMeans.clear()">🗑️ 重置</button>
+                    <span>画一个 <b>U型</b> 或 <b>S型</b> 数据分布。</span>
+                    <button class="btn-outline" style="margin-left:auto" onclick="engVs.reset()">清空</button>
                 </div>
-                <div class="canvas-wrapper" style="height:400px;" onmousedown="simKMeans.addPoint(event)">
-                    <canvas id="cvs_kmeans"></canvas>
-                </div>
+                <div class="legend"><span><span class="dot" style="background:var(--danger)"></span>线性</span><span><span class="dot" style="background:var(--success)"></span>多项式 (Deg=4)</span></div>
+                <div class="canvas-box" style="height:400px" onmousedown="engVs.add(event)"><canvas id="cvs_vs"></canvas></div>
             </div>
         `,
-        init: () => simKMeans.init()
+        init: () => engVs.init()
+    },
+
+    // --- 6. Logistic ---
+    'cls_logistic': {
+        title: '实验室：逻辑回归 (训练过程)',
+        content: `
+            <div class="card">
+                <div class="controls">
+                    <span>左键加<b>A类</b>，右键加<b>B类</b>。</span>
+                    <button class="btn-primary" style="margin-left:auto" onclick="engLog.toggle()" id="btn_log">▶ 开始训练</button>
+                    <button class="btn-outline" onclick="engLog.reset()">🗑️ 清空</button>
+                </div>
+                <div class="grid-2">
+                    <div>
+                        <div class="legend"><span><span class="dot" style="background:var(--accent)"></span>A类</span><span><span class="dot" style="background:var(--danger)"></span>B类</span></div>
+                        <div class="canvas-box" style="height:350px" onmousedown="engLog.add(event)" oncontextmenu="event.preventDefault(); engLog.add(event, 1)"><canvas id="cvs_log_main"></canvas></div>
+                    </div>
+                    <div>
+                        <div class="legend"><span><span class="dot" style="background:var(--warning)"></span>Loss (交叉熵)</span></div>
+                        <div class="canvas-box" style="height:350px"><canvas id="cvs_log_loss"></canvas></div>
+                    </div>
+                </div>
+                <p style="font-size:0.8rem; margin-top:5px; color:var(--text-sub)">右侧 Loss 范围：0.0 ~ 1.0</p>
+            </div>
+        `,
+        init: () => engLog.init()
+    },
+
+    // --- 7. KNN ---
+    'cls_knn': {
+        title: '实验室：KNN (K=2)',
+        content: `
+            <div class="card">
+                <div class="controls">
+                    <span>左键红点，右键蓝点。</span>
+                    <label style="margin-left:auto">K值: <input type="number" id="knnK" value="2" min="1" max="9" style="width:50px" onchange="engKNN.draw()"></label>
+                    <button class="btn-outline" onclick="engKNN.reset()">清空</button>
+                </div>
+                <div class="canvas-box" style="height:450px" onmousedown="engKNN.add(event)" oncontextmenu="event.preventDefault(); engKNN.add(event, 1)"><canvas id="cvs_knn"></canvas></div>
+            </div>
+        `,
+        init: () => engKNN.init()
+    },
+
+    // --- 8. KMeans ---
+    'clu_kmeans': {
+        title: '实验室：K-Means',
+        content: `
+            <div class="card">
+                <div class="controls">
+                    <span>1. 点击加点 &nbsp; 2. 点击迭代</span>
+                    <button class="btn-primary" style="margin-left:auto" onclick="engKMeans.step()">👣 迭代一步</button>
+                    <button class="btn-outline" onclick="engKMeans.reset()">🗑️ 重置</button>
+                </div>
+                <div class="canvas-box" style="height:400px" onmousedown="engKMeans.add(event)"><canvas id="cvs_kmeans"></canvas></div>
+            </div>
+        `,
+        init: () => engKMeans.init()
     }
 };
 
 // ==========================================
-// 2. 模拟引擎 (Engines)
+// 2. 引擎核心 (Engines)
 // ==========================================
 
-// --- Engine 1: Loss & Overfitting (Slowed Down) ---
+// --- Theory: Loss Animation (Fix: Proper Scaling) ---
 const simLoss = {
-    epoch: 0,
-    timer: null,
-    data: [],
-    trainLoss: [],
-    valLoss: [],
-    ctxFit: null,
-    ctxLoss: null,
-    
-    init: function() {
-        this.reset();
-        this.ctxFit = setupCanvas('cvs_fit');
-        this.ctxLoss = setupCanvas('cvs_loss');
-        this.draw();
-    },
-    
+    ep:0, timer:null, tL:[], vL:[], pts:[], ctxF:null, ctxL:null,
+    init: function() { this.ctxF=getCtx('cvs_loss_fit'); this.ctxL=getCtx('cvs_loss_chart'); this.reset(); },
     reset: function() {
-        clearInterval(this.timer);
-        this.timer = null;
-        this.epoch = 0;
-        this.trainLoss = [];
-        this.valLoss = [];
-        // 生成数据
-        this.data = [];
-        for(let x=-10; x<=10; x+=1.5) {
-            this.data.push({x:x, y: 0.3*x*x + (Math.random()-0.5)*30});
-        }
-        updateStatus('lossStatus', 'Epoch: 0 | 准备就绪', 'bg-gray');
-        if(this.ctxFit) this.draw();
+        clearInterval(this.timer); this.timer=null; this.ep=0; this.tL=[]; this.vL=[];
+        this.pts=[]; for(let x=-10;x<=10;x+=1.5) this.pts.push({x, y:0.3*x*x+(Math.random()-0.5)*30});
+        updateTxt('loss_badge', 'Epoch: 0'); 
+        if(this.ctxF) this.draw();
     },
-    
-    start: function() {
-        if(this.timer) return;
-        // 降低速度：每 150ms 走一步 (之前是每帧 16ms)
-        this.timer = setInterval(() => this.step(true), 150);
-    },
-    
-    step: function(auto=false) {
-        if(this.epoch >= 60) {
-            clearInterval(this.timer);
-            this.timer = null;
-            return;
-        }
-        this.epoch++;
-        
-        // 模拟 Loss 逻辑
-        const base = Math.exp(-this.epoch * 0.1) * 80;
-        let tl = base + Math.random()*2;
-        let vl = base + 15 + Math.random()*5;
-        
-        // 过拟合点
-        if(this.epoch > 25) {
-            tl -= (this.epoch-25)*0.5; // Train 继续降
-            vl += (this.epoch-25)*1.2; // Val 升高
-            updateStatus('lossStatus', `Epoch: ${this.epoch} | ⚠️ 过拟合中!`, 'bg-red');
-        } else {
-            updateStatus('lossStatus', `Epoch: ${this.epoch} | 学习中...`, 'bg-green');
-        }
-        
-        if(tl < 0) tl = 0;
-        this.trainLoss.push(tl);
-        this.valLoss.push(vl);
-        this.draw();
-        
-        if(!auto) clearInterval(this.timer); // 如果是手动点击单步，清除自动计时器
-    },
-    
-    draw: function() {
-        if(!this.ctxFit) return;
-        const w = this.ctxFit.canvas.width;
-        const h = this.ctxFit.canvas.height;
-        
-        // 1. Draw Fit
-        this.ctxFit.clearRect(0,0,w,h);
-        // Points
-        this.ctxFit.fillStyle = getCSS('--text-main');
-        this.data.forEach(p => {
-            drawCircle(this.ctxFit, mapX(p.x, w), mapY(p.y, h), 4);
-        });
-        // Line
-        this.ctxFit.strokeStyle = getCSS('--accent');
-        this.ctxFit.lineWidth = 3;
-        this.ctxFit.beginPath();
-        for(let x=-10; x<=10; x+=0.5) {
-            let y_pred;
-            if(this.epoch < 5) y_pred = 40; // Underfit
-            else if(this.epoch < 25) y_pred = 0.3*x*x; // Good fit
-            else {
-                // Wiggly Overfit
-                y_pred = 0.3*x*x + Math.sin(x*2 + this.epoch)*10 * ((this.epoch-20)/40);
-            }
-            const px = mapX(x, w);
-            const py = mapY(y_pred, h);
-            if(x===-10) this.ctxFit.moveTo(px, py); else this.ctxFit.lineTo(px, py);
-        }
-        this.ctxFit.stroke();
-        
-        // 2. Draw Loss
-        const ctxL = this.ctxLoss;
-        ctxL.clearRect(0,0,w,h);
-        drawGrid(ctxL, w, h);
-        
-        drawChartLine(ctxL, this.trainLoss, '#22c55e', 100, w, h);
-        drawChartLine(ctxL, this.valLoss, '#ef4444', 100, w, h);
-    }
-};
-
-// --- Engine 2: Regularization ---
-const simReg = {
-    ctx: null,
-    points: [],
-    
-    init: function() {
-        this.ctx = setupCanvas('cvs_reg');
-        this.points = [];
-        for(let i=0; i<15; i++) {
-            this.points.push({x: i/14, y: 0.5 + (Math.random()-0.5)*0.3});
-        }
-        this.draw();
-    },
-    
-    draw: function() {
-        if(!this.ctx) return;
-        const w = this.ctx.canvas.width;
-        const h = this.ctx.canvas.height;
-        const lambda = parseInt(document.getElementById('regLambda').value);
-        const degree = parseInt(document.getElementById('regDegree').value);
-        
-        document.getElementById('lambdaDisp').innerText = lambda > 0 ? `λ = ${lambda}` : "0 (过拟合)";
-        
-        this.ctx.clearRect(0,0,w,h);
-        
-        // Points
-        this.ctx.fillStyle = getCSS('--text-main');
-        this.points.forEach(p => {
-            drawCircle(this.ctx, p.x*w, h - p.y*h, 5);
-        });
-        
-        // Curve
-        this.ctx.strokeStyle = lambda > 50 ? '#22c55e' : (lambda > 10 ? '#38bdf8' : '#ef4444');
-        this.ctx.lineWidth = 3;
-        this.ctx.beginPath();
-        
-        for(let x=0; x<=1; x+=0.01) {
-            let y = 0.5;
-            // 模拟算法：Lambda 越大，核函数的带宽(bandwidth)越大，曲线越平滑
-            const smooth = 1 + lambda * 0.5; 
-            const wiggliness = degree * 20; 
-            
-            for(let p of this.points) {
-                const dist = Math.abs(x - p.x);
-                // 没有正则化时，高次多项式允许在极短距离内剧烈变化
-                // 加了正则化，强行拉平变化
-                const influence = Math.exp(-dist*dist * (wiggliness / smooth));
-                y += (p.y - 0.5) * influence * 0.8;
-            }
-            if(x===0) this.ctx.moveTo(x*w, h-y*h); else this.ctx.lineTo(x*w, h-y*h);
-        }
-        this.ctx.stroke();
-    }
-};
-
-// --- Engine 3: Linear Regression ---
-const simLinear = {
-    ctx: null,
-    points: [],
-    
-    init: function() {
-        this.ctx = setupCanvas('cvs_linear');
-        this.points = [];
-        this.draw();
-    },
-    
-    addPoint: function(e) {
-        const rect = this.ctx.canvas.getBoundingClientRect();
-        this.points.push({x: e.clientX - rect.left, y: e.clientY - rect.top});
-        this.draw();
-    },
-    
-    clear: function() { this.points = []; this.draw(); },
-    
-    draw: function() {
-        const w = this.ctx.canvas.width;
-        const h = this.ctx.canvas.height;
-        this.ctx.clearRect(0,0,w,h);
-        drawGrid(this.ctx, w, h);
-        
-        // Draw Points
-        this.ctx.fillStyle = getCSS('--text-main');
-        this.points.forEach(p => drawCircle(this.ctx, p.x, p.y, 5));
-        
-        // Least Squares
-        if(this.points.length >= 2) {
-            let n = this.points.length;
-            let sumX=0, sumY=0, sumXY=0, sumXX=0;
-            for(let p of this.points) {
-                sumX += p.x; sumY += p.y;
-                sumXY += p.x*p.y; sumXX += p.x*p.x;
-            }
-            const slope = (n*sumXY - sumX*sumY) / (n*sumXX - sumX*sumX);
-            const intercept = (sumY - slope*sumX) / n;
-            
-            this.ctx.strokeStyle = getCSS('--accent');
-            this.ctx.lineWidth = 2;
-            this.ctx.beginPath();
-            this.ctx.moveTo(0, intercept);
-            this.ctx.lineTo(w, slope*w + intercept);
-            this.ctx.stroke();
-        }
-    }
-};
-
-// --- Engine 4: KNN ---
-const simKNN = {
-    ctx: null,
-    points: [], // {x, y, type: 0|1}
-    
-    init: function() {
-        this.ctx = setupCanvas('cvs_knn');
-        this.points = [];
-        this.draw();
-    },
-    
-    addPoint: function(e, type=0) {
-        const rect = this.ctx.canvas.getBoundingClientRect();
-        this.points.push({x: e.clientX - rect.left, y: e.clientY - rect.top, type: type});
-        this.draw();
-    },
-    
-    clear: function() { this.points = []; this.draw(); },
-    
-    draw: function() {
-        const w = this.ctx.canvas.width;
-        const h = this.ctx.canvas.height;
-        this.ctx.clearRect(0,0,w,h);
-        
-        const k = parseInt(document.getElementById('knnK').value) || 3;
-        const ca = getCSS('--accent'); // Class 0
-        const cb = '#ef4444'; // Class 1 (Red)
-        
-        // Draw Decision Boundary (Low Res)
-        if(this.points.length > 2) {
-            const res = 10;
-            for(let x=0; x<w; x+=res) {
-                for(let y=0; y<h; y+=res) {
-                    // Find K nearest
-                    const dists = this.points.map(p => ({
-                        d: (p.x-x)**2 + (p.y-y)**2,
-                        type: p.type
-                    })).sort((a,b) => a.d - b.d).slice(0, k);
-                    
-                    const count0 = dists.filter(d => d.type===0).length;
-                    const color = count0 > k/2 ? ca : cb;
-                    this.ctx.fillStyle = color;
-                    this.ctx.globalAlpha = 0.1;
-                    this.ctx.fillRect(x, y, res, res);
-                }
-            }
-        }
-        
-        // Draw Points
-        this.ctx.globalAlpha = 1.0;
-        this.points.forEach(p => {
-            this.ctx.fillStyle = p.type === 0 ? ca : cb;
-            drawCircle(this.ctx, p.x, p.y, 6);
-            this.ctx.strokeStyle = '#fff';
-            this.ctx.stroke();
-        });
-    }
-};
-
-// --- Engine 5: K-Means ---
-const simKMeans = {
-    ctx: null,
-    points: [], // {x, y, group}
-    centroids: [], // {x, y, color}
-    colors: ['#4f46e5', '#22c55e', '#ef4444'],
-    
-    init: function() {
-        this.ctx = setupCanvas('cvs_kmeans');
-        this.clear();
-    },
-    
-    clear: function() {
-        this.points = [];
-        this.centroids = [];
-        this.draw();
-    },
-    
-    addPoint: function(e) {
-        const rect = this.ctx.canvas.getBoundingClientRect();
-        this.points.push({x: e.clientX - rect.left, y: e.clientY - rect.top, group: -1});
-        this.draw();
-    },
-    
+    start: function() { if(!this.timer) this.timer=setInterval(()=>this.step(), 100); },
     step: function() {
-        if(this.points.length === 0) return;
+        if(this.ep++ > 60) { clearInterval(this.timer); this.timer=null; return; }
         
-        // Init Centroids
-        if(this.centroids.length === 0) {
-            for(let i=0; i<3; i++) {
-                // Randomly pick a point as centroid start
-                if(this.points[i]) {
-                    this.centroids.push({x: this.points[i].x, y: this.points[i].y});
-                } else {
-                    this.centroids.push({x: Math.random()*this.ctx.canvas.width, y: Math.random()*this.ctx.canvas.height});
-                }
-            }
-        } else {
-            // Move Centroids
-            const sums = [
-                {x:0, y:0, n:0}, {x:0, y:0, n:0}, {x:0, y:0, n:0}
-            ];
-            this.points.forEach(p => {
-                if(p.group !== -1) {
-                    sums[p.group].x += p.x;
-                    sums[p.group].y += p.y;
-                    sums[p.group].n++;
-                }
-            });
-            this.centroids.forEach((c, i) => {
-                if(sums[i].n > 0) {
-                    c.x = sums[i].x / sums[i].n;
-                    c.y = sums[i].y / sums[i].n;
-                }
-            });
-        }
+        // Sim Logic: Start high (~80), drop to ~10 (Train), ~40 (Val)
+        const base = Math.exp(-this.ep*0.1)*80;
+        let tl=base+Math.random()*2, vl=base+15+Math.random()*5;
+        if(this.ep>25) { tl-=(this.ep-25)*0.5; vl+=(this.ep-25)*1.5; } // Overfit split
         
-        // Assign Points
-        this.points.forEach(p => {
-            let minDist = Infinity;
-            this.centroids.forEach((c, i) => {
-                const d = (p.x-c.x)**2 + (p.y-c.y)**2;
-                if(d < minDist) { minDist = d; p.group = i; }
-            });
-        });
-        
-        this.draw();
+        this.tL.push(Math.max(0,tl)); this.vL.push(Math.max(0,vl));
+        updateTxt('loss_badge', `Epoch: ${this.ep}`); this.draw();
     },
-    
     draw: function() {
-        const w = this.ctx.canvas.width;
-        const h = this.ctx.canvas.height;
-        this.ctx.clearRect(0,0,w,h);
+        const w=this.ctxF.canvas.width, h=this.ctxF.canvas.height;
+        this.ctxF.clearRect(0,0,w,h);
+        // Draw Points
+        this.ctxF.fillStyle=getVar('--text-main'); 
+        this.pts.forEach(p=>circle(this.ctxF, map(p.x,-10,10,0,w), map(p.y,-50,150,h,0), 4));
+        // Draw Curve
+        this.ctxF.strokeStyle=getVar('--accent'); this.ctxF.lineWidth=3; this.ctxF.beginPath();
+        for(let x=-10;x<=10;x+=0.5) {
+            let y = this.ep<5?40:(this.ep<25?0.3*x*x : 0.3*x*x+Math.sin(x*2+this.ep)*12*(this.ep-20)/40);
+            const px=map(x,-10,10,0,w), py=map(y,-50,150,h,0); if(x===-10) this.ctxF.moveTo(px,py); else this.ctxF.lineTo(px,py);
+        }
+        this.ctxF.stroke();
         
-        // Points
-        this.points.forEach(p => {
-            this.ctx.fillStyle = p.group === -1 ? '#94a3b8' : this.colors[p.group];
-            drawCircle(this.ctx, p.x, p.y, 5);
-        });
-        
-        // Centroids
-        this.centroids.forEach((c, i) => {
-            this.ctx.fillStyle = this.colors[i];
-            this.ctx.strokeStyle = '#000';
-            this.ctx.lineWidth = 2;
-            this.ctx.beginPath();
-            this.ctx.rect(c.x-8, c.y-8, 16, 16);
-            this.ctx.fill();
-            this.ctx.stroke();
-        });
+        // Draw Loss Chart
+        const cL=this.ctxL; cL.clearRect(0,0,w,h); drawGrid(cL,w,h);
+        lineChart(cL, this.tL, getVar('--success'), 120); 
+        lineChart(cL, this.vL, getVar('--danger'), 120);
     }
 };
 
+// --- Theory: Regularization ---
+const simReg = {
+    ctx:null, pts:[],
+    init: function() { this.ctx=getCtx('cvs_reg'); this.gen(); },
+    gen: function() { this.pts=[]; for(let i=0;i<15;i++) this.pts.push({x:i/14, y:0.5+(Math.random()-0.5)*0.4}); this.update(); },
+    update: function() {
+        if(!this.ctx) return;
+        const w=this.ctx.canvas.width, h=this.ctx.canvas.height;
+        const deg=parseInt(document.getElementById('regDeg').value), lam=parseInt(document.getElementById('regLam').value);
+        document.getElementById('lamVal').innerText = lam;
+        
+        this.ctx.clearRect(0,0,w,h); drawGrid(this.ctx,w,h);
+        this.ctx.fillStyle=getVar('--text-main'); this.pts.forEach(p=>circle(this.ctx, p.x*w, h-p.y*h, 5));
+        
+        const pred = Matrix.solveReg(this.pts, deg, lam/20);
+        if(pred) {
+            this.ctx.strokeStyle = lam>50 ? getVar('--success') : (lam>10?getVar('--accent'):getVar('--danger'));
+            this.ctx.lineWidth=3; this.ctx.beginPath();
+            for(let x=0; x<=1; x+=0.01) { const y=pred(x); if(x===0) this.ctx.moveTo(x*w,h-y*h); else this.ctx.lineTo(x*w,h-y*h); }
+            this.ctx.stroke();
+        }
+    }
+};
+
+// --- Regression: Simple ---
+const engLinear = {
+    ctx:null, pts:[],
+    init: function() { this.ctx=getCtx('cvs_linear'); this.reset(); },
+    reset: function() { this.pts=[]; this.draw(); },
+    add: function(e) { const r=this.ctx.canvas.getBoundingClientRect(); this.pts.push({x:e.clientX-r.left, y:e.clientY-r.top}); this.draw(); },
+    draw: function() {
+        const w=this.ctx.canvas.width, h=this.ctx.canvas.height;
+        this.ctx.clearRect(0,0,w,h); drawGrid(this.ctx,w,h);
+        this.ctx.fillStyle=getVar('--text-main'); this.pts.forEach(p=>circle(this.ctx, p.x, p.y, 5));
+        if(this.pts.length>1) {
+            const pred = Matrix.solveReg(this.pts, 1, 0);
+            this.ctx.strokeStyle=getVar('--accent'); this.ctx.lineWidth=2; this.ctx.beginPath();
+            this.ctx.moveTo(0, pred(0)); this.ctx.lineTo(w, pred(w)); this.ctx.stroke();
+        }
+    }
+};
+
+// --- Regression: Extrapolation ---
+const engPoly = {
+    ctx:null, tr:[], te:[],
+    init: function() { this.ctx=getCtx('cvs_poly'); this.gen(); },
+    gen: function() {
+        this.tr=[]; this.te=[]; const f=x=>0.4*x*x-0.1*x*x*x;
+        for(let i=0;i<15;i++) { let x=Math.random()*2-1; this.tr.push({x, y:f(x)+(Math.random()-0.5)*0.3}); }
+        this.update();
+    },
+    update: function() {
+        if(!this.ctx) return;
+        const deg=parseInt(document.getElementById('polyDeg').value);
+        updateTxt('polyDegDisp', deg);
+        const w=this.ctx.canvas.width, h=this.ctx.canvas.height;
+        this.ctx.clearRect(0,0,w,h);
+        
+        // Zones
+        this.ctx.fillStyle=getVar('--bg-body')==='#f8fafc'?'#f1f5f9':'#1e293b'; this.ctx.fillRect(0,0,w,h);
+        this.ctx.fillStyle=getVar('--bg-card'); this.ctx.fillRect(w*0.25,0,w*0.5,h);
+        drawGrid(this.ctx,w,h);
+
+        const pred = Matrix.solveReg(this.tr, deg, 0);
+        if(pred) {
+            this.ctx.strokeStyle=getVar('--accent'); this.ctx.lineWidth=3; this.ctx.beginPath();
+            let start=false;
+            for(let px=0; px<=w; px+=2) {
+                const mx=map(px,0,w,-2,2), my=pred(mx), py=map(my,-2,3,h,0);
+                if(py<-100||py>h+100){start=false;continue;}
+                if(!start){this.ctx.moveTo(px,py);start=true;}else this.ctx.lineTo(px,py);
+            }
+            this.ctx.stroke();
+        }
+        
+        const mx=x=>map(x,-2,2,0,w), my=y=>map(y,-2,3,h,0);
+        this.tr.forEach(p=>{this.ctx.fillStyle=getVar('--text-main'); circle(this.ctx, mx(p.x), my(p.y), 4);});
+        
+        this.ctx.strokeStyle='#94a3b8'; this.ctx.setLineDash([5,5]);
+        this.ctx.beginPath(); this.ctx.moveTo(w*0.25,0); this.ctx.lineTo(w*0.25,h); this.ctx.stroke();
+        this.ctx.beginPath(); this.ctx.moveTo(w*0.75,0); this.ctx.lineTo(w*0.75,h); this.ctx.stroke();
+        this.ctx.setLineDash([]);
+    }
+};
+
+// --- Linear vs Non-Linear ---
+const engVs = {
+    ctx:null, pts:[],
+    init: function() { this.ctx=getCtx('cvs_vs'); this.reset(); },
+    reset: function() { this.pts=[]; this.draw(); },
+    add: function(e) { const r=this.ctx.canvas.getBoundingClientRect(); this.pts.push({x:e.clientX-r.left, y:e.clientY-r.top}); this.draw(); },
+    draw: function() {
+        const w=this.ctx.canvas.width, h=this.ctx.canvas.height;
+        this.ctx.clearRect(0,0,w,h); drawGrid(this.ctx,w,h);
+        this.ctx.fillStyle=getVar('--text-main'); this.pts.forEach(p=>circle(this.ctx, p.x, p.y, 5));
+        if(this.pts.length<2) return;
+        const p1=Matrix.solveReg(this.pts, 1);
+        if(p1){this.ctx.strokeStyle=getVar('--danger');this.ctx.lineWidth=3;this.ctx.beginPath();this.ctx.moveTo(0,p1(0));this.ctx.lineTo(w,p1(w));this.ctx.stroke();}
+        const p4=Matrix.solveReg(this.pts, 4);
+        if(p4){this.ctx.strokeStyle=getVar('--success');this.ctx.lineWidth=3;this.ctx.beginPath();for(let x=0;x<=w;x+=5){let y=p4(x);if(x===0)this.ctx.moveTo(x,y);else this.ctx.lineTo(x,y);}this.ctx.stroke();}
+    }
+};
+
+// --- Logistic ---
+const engLog = {
+    ctxM:null, ctxL:null, pts:[], w:{w1:0,w2:0,b:0}, ls:[], tm:null, tr:false,
+    init: function() { this.ctxM=getCtx('cvs_log_main'); this.ctxL=getCtx('cvs_log_loss'); this.reset(); },
+    reset: function() { 
+        this.pts=[]; this.ls=[]; this.tr=false; clearInterval(this.tm); 
+        this.w={w1:Math.random()-0.5,w2:Math.random()-0.5,b:0}; updateTxt('btn_log','▶ 开始训练'); this.draw(); 
+    },
+    add: function(e,t=0) { const r=this.ctxM.canvas.getBoundingClientRect(); this.pts.push({x:(e.clientX-r.left)/r.width*2-1, y:-((e.clientY-r.top)/r.height*2-1), t}); this.draw(); },
+    toggle: function() { if(this.tr){this.tr=false;clearInterval(this.tm);updateTxt('btn_log','▶ 继续');}else{this.tr=true;this.tm=setInterval(()=>this.step(),20);updateTxt('btn_log','⏸ 暂停');} },
+    step: function() {
+        if(!this.pts.length) return;
+        let dw1=0,dw2=0,db=0,loss=0,N=this.pts.length;
+        this.pts.forEach(p=>{
+            const z=this.w.w1*p.x+this.w.w2*p.y+this.w.b, a=1/(1+Math.exp(-z));
+            loss+=-(p.t*Math.log(Math.max(1e-4,a))+(1-p.t)*Math.log(Math.max(1e-4,1-a)));
+            const d=a-p.t; dw1+=p.x*d; dw2+=p.y*d; db+=d;
+        });
+        const lr=0.05; this.w.w1-=lr*dw1/N; this.w.w2-=lr*dw2/N; this.w.b-=lr*db/N;
+        this.ls.push(loss/N); if(this.ls.length>200)this.ls.shift();
+        this.draw();
+    },
+    draw: function() {
+        const w=this.ctxM.canvas.width, h=this.ctxM.canvas.height;
+        this.ctxM.clearRect(0,0,w,h);
+        if(this.pts.length) {
+            const img=this.ctxM.createImageData(w,h), {w1,w2,b}=this.w;
+            for(let py=0;py<h;py+=5)for(let px=0;px<w;px+=5) {
+                const a=1/(1+Math.exp(-(w1*(px/w*2-1)+w2*(-(py/h*2-1))+b)));
+                const c=a<0.5?0:1, alp=Math.abs(a-0.5)*150;
+                for(let dy=0;dy<5;dy++)for(let dx=0;dx<5;dx++){const i=((py+dy)*w+(px+dx))*4; img.data[i]=c?239:56;img.data[i+1]=c?68:189;img.data[i+2]=c?68:248;img.data[i+3]=alp;}
+            }
+            this.ctxM.putImageData(img,0,0);
+        }
+        this.pts.forEach(p=>{this.ctxM.fillStyle=p.t===0?getVar('--accent'):'#ef4444'; circle(this.ctxM,(p.x+1)/2*w,(-p.y+1)/2*h,6); this.ctxM.strokeStyle='#fff';this.ctxM.stroke();});
+        
+        // Draw Loss (Max scale 1.0 for Log Loss)
+        const cL=this.ctxL; cL.clearRect(0,0,w,h); drawGrid(cL,w,h); 
+        lineChart(cL,this.ls,getVar('--warning'), 1.0); 
+    }
+};
+
+// --- KNN ---
+const engKNN = {
+    ctx:null, pts:[],
+    init: function() { this.ctx=getCtx('cvs_knn'); this.reset(); },
+    reset: function() { this.pts=[]; this.draw(); },
+    add: function(e,t=0) { const r=this.ctx.canvas.getBoundingClientRect(); this.pts.push({x:e.clientX-r.left, y:e.clientY-r.top, t}); this.draw(); },
+    draw: function() {
+        const w=this.ctx.canvas.width, h=this.ctx.canvas.height, K=parseInt(document.getElementById('knnK').value);
+        this.ctx.clearRect(0,0,w,h);
+        if(this.pts.length>0) {
+            for(let x=0;x<w;x+=10)for(let y=0;y<h;y+=10) {
+                const ds=this.pts.map(p=>({d:(p.x-x)**2+(p.y-y)**2, t:p.t})).sort((a,b)=>a.d-b.d).slice(0,K);
+                const c0=ds.filter(d=>d.t===0).length;
+                this.ctx.fillStyle=c0>K/2?getVar('--accent'):'#ef4444'; this.ctx.globalAlpha=0.2; this.ctx.fillRect(x,y,10,10);
+            }
+        }
+        this.ctx.globalAlpha=1; this.pts.forEach(p=>{this.ctx.fillStyle=p.t===0?getVar('--accent'):'#ef4444'; circle(this.ctx,p.x,p.y,6); this.ctx.strokeStyle='#fff';this.ctx.stroke();});
+    }
+};
+
+// --- KMeans ---
+const engKMeans = {
+    ctx:null, pts:[], cens:[], cols:['#f59e0b','#22c55e','#ef4444'],
+    init: function() { this.ctx=getCtx('cvs_kmeans'); this.reset(); },
+    reset: function() { this.pts=[]; this.cens=[]; this.draw(); },
+    add: function(e) { const r=this.ctx.canvas.getBoundingClientRect(); this.pts.push({x:e.clientX-r.left, y:e.clientY-r.top, g:-1}); this.draw(); },
+    step: function() {
+        if(!this.pts.length) return;
+        if(!this.cens.length) for(let i=0;i<3;i++) this.cens.push(this.pts[Math.floor(Math.random()*this.pts.length)] || {x:Math.random()*300,y:Math.random()*300});
+        else {
+            const sums=[{x:0,y:0,n:0},{x:0,y:0,n:0},{x:0,y:0,n:0}];
+            this.pts.forEach(p=>{if(p.g!==-1){sums[p.g].x+=p.x;sums[p.g].y+=p.y;sums[p.g].n++;}});
+            this.cens.forEach((c,i)=>{if(sums[i].n){c.x=sums[i].x/sums[i].n;c.y=sums[i].y/sums[i].n;}});
+        }
+        this.pts.forEach(p=>{ let min=Infinity; this.cens.forEach((c,i)=>{const d=(p.x-c.x)**2+(p.y-c.y)**2;if(d<min){min=d;p.g=i;}}); });
+        this.draw();
+    },
+    draw: function() {
+        const w=this.ctx.canvas.width, h=this.ctx.canvas.height;
+        this.ctx.clearRect(0,0,w,h);
+        this.pts.forEach(p=>{this.ctx.fillStyle=p.g===-1?getVar('--text-sub'):this.cols[p.g]; circle(this.ctx,p.x,p.y,5);});
+        this.cens.forEach((c,i)=>{this.ctx.fillStyle=this.cols[i];this.ctx.strokeStyle='#000';this.ctx.lineWidth=2;this.ctx.beginPath();this.ctx.rect(c.x-8,c.y-8,16,16);this.ctx.fill();this.ctx.stroke();});
+    }
+};
 
 // ==========================================
-// 3. Helper Functions
+// Utils & Matrix
 // ==========================================
+const Matrix = {
+    transpose: A => A[0].map((_, c) => A.map(r => r[c])),
+    multiply: (A, B) => {
+        const m=A.length, n=A[0].length, p=B[0].length, R=Array(m).fill(0).map(()=>Array(p).fill(0));
+        for(let i=0;i<m;i++) for(let j=0;j<p;j++) for(let k=0;k<n;k++) R[i][j]+=A[i][k]*B[k][j];
+        return R;
+    },
+    inverse: (A) => {
+        const n=A.length, M=A.map((r,i)=>[...r, ...Array(n).fill(0).map((_,j)=>i===j?1:0)]);
+        for(let i=0;i<n;i++) {
+            let p=M[i][i]; if(Math.abs(p)<1e-9) p=1e-9;
+            for(let j=0;j<2*n;j++) M[i][j]/=p;
+            for(let k=0;k<n;k++) if(k!==i) { const f=M[k][i]; for(let j=0;j<2*n;j++) M[k][j]-=f*M[i][j]; }
+        }
+        return M.map(r=>r.slice(n));
+    },
+    solveReg: (pts, deg, lambda=0) => {
+        if(pts.length < 2) return null;
+        const xs=pts.map(p=>p.x), minX=Math.min(...xs), maxX=Math.max(...xs), rng=maxX-minX||1;
+        const X = pts.map(p => { const nx=(p.x-minX)/rng*2-1; return Array(deg+1).fill(0).map((_,i)=>Math.pow(nx,i)); });
+        const Y = pts.map(p => [p.y]);
+        try {
+            const XT = Matrix.transpose(X);
+            let XTX = Matrix.multiply(XT, X);
+            if(lambda>0) for(let i=0;i<=deg;i++) XTX[i][i]+=lambda;
+            const W = Matrix.multiply(Matrix.multiply(Matrix.inverse(XTX), XT), Y);
+            return x => { const nx=(x-minX)/rng*2-1; return W.reduce((s,w,i)=>s+w[0]*Math.pow(nx,i),0); };
+        } catch(e) { return null; }
+    }
+};
+
+function getCtx(id) { const c=document.getElementById(id); return c? (c.width=c.parentElement.clientWidth, c.height=c.parentElement.clientHeight, c.getContext('2d')) : null; }
+function getVar(n) { return getComputedStyle(document.body).getPropertyValue(n).trim(); }
+function circle(ctx,x,y,r) { ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); }
+function map(v,i1,i2,o1,o2) { return o1 + (o2-o1)*((v-i1)/(i2-i1)); }
+function updateTxt(id,t) { document.getElementById(id).innerText=t; }
+function drawGrid(c,w,h) { c.strokeStyle=getVar('--chart-grid'); c.lineWidth=1; c.beginPath(); c.moveTo(0,h-20); c.lineTo(w,h-20); c.stroke(); }
+function lineChart(c,d,col,maxScale) {
+    if(!d.length)return; 
+    c.strokeStyle=col; c.lineWidth=2; c.beginPath(); 
+    d.forEach((v,i)=>{
+        const x=i/d.length*c.canvas.width;
+        // Fix Scaling: use maxScale as the ceiling
+        const y=c.canvas.height-20 - (v / maxScale * (c.canvas.height-40));
+        if(i===0)c.moveTo(x,y);else c.lineTo(x,y);
+    }); 
+    c.stroke(); 
+}
+
 const router = {
     load: function(id) {
-        const page = pages[id];
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        // Find element by onclick content (simplified)
-        const els = document.querySelectorAll('.nav-item');
-        for(let el of els) {
-            if(el.getAttribute('onclick').includes(id)) el.classList.add('active');
-        }
-        
-        document.getElementById('pageTitle').innerText = page.title;
-        document.getElementById('app').innerHTML = page.content;
-        
+        document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));
+        const active=Array.from(document.querySelectorAll('.nav-item')).find(e=>e.getAttribute('onclick').includes(id));
+        if(active) active.classList.add('active');
+        document.getElementById('pageTitle').innerText = pages[id].title;
+        document.getElementById('app').innerHTML = pages[id].content;
+        if(pages[id].init) setTimeout(pages[id].init, 50);
         if(window.MathJax) MathJax.typesetPromise();
-        if(page.init) setTimeout(page.init, 50);
     }
 };
-
-function getCSS(varName) {
-    return getComputedStyle(document.body).getPropertyValue(varName).trim();
-}
-
-function setupCanvas(id) {
-    const cvs = document.getElementById(id);
-    if(!cvs) return null;
-    cvs.width = cvs.parentElement.clientWidth;
-    cvs.height = cvs.parentElement.clientHeight;
-    return cvs.getContext('2d');
-}
-
-function updateStatus(id, text, bgClass) {
-    const el = document.getElementById(id);
-    if(el) {
-        el.innerText = text;
-        el.className = `badge ${bgClass}`;
-    }
-}
-
-function drawCircle(ctx, x, y, r) {
-    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
-}
-
-function drawGrid(ctx, w, h) {
-    ctx.strokeStyle = getCSS('--chart-grid');
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(0, h-20); ctx.lineTo(w, h-20); // X-axis
-    ctx.moveTo(20, 0); ctx.lineTo(20, h); // Y-axis
-    ctx.stroke();
-}
-
-function drawChartLine(ctx, data, color, maxDataLen, w, h) {
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    data.forEach((val, i) => {
-        const x = 20 + (i / maxDataLen) * (w-20);
-        const y = h - 20 - (val / 150 * (h-40));
-        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-    });
-    ctx.stroke();
-}
-
-// Maps -10 to 10 coord space to canvas width
-function mapX(x, w) { return (x + 10) / 20 * w; }
-function mapY(y, h) { return h - (y + 10) / 100 * h; }
 
 function toggleTheme() {
-    const html = document.documentElement;
-    const current = html.getAttribute('data-theme');
-    html.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
-    
-    // Re-render current page
-    const active = document.querySelector('.nav-item.active');
-    if(active) {
-        const id = active.getAttribute('onclick').match(/'([^']+)'/)[1];
-        if(pages[id].init) pages[id].init();
-    }
+    const h=document.documentElement; h.setAttribute('data-theme', h.getAttribute('data-theme')==='dark'?'light':'dark');
+    const id=document.querySelector('.nav-item.active').getAttribute('onclick').match(/'([^']+)'/)[1];
+    if(pages[id].init) pages[id].init();
 }
 
-// Boot
-window.onload = () => router.load('concept_loss');
-window.onresize = () => {
-    // Resize handling simplified: reload current view logic
-    const active = document.querySelector('.nav-item.active');
-    if(active) {
-         const id = active.getAttribute('onclick').match(/'([^']+)'/)[1];
-         if(pages[id].init) pages[id].init();
-    }
-};
+window.onload = () => router.load('theory_loss');
+window.onresize = () => { const id=document.querySelector('.nav-item.active').getAttribute('onclick').match(/'([^']+)'/)[1]; if(pages[id].init) pages[id].init(); };
 
 </script>
 </body>
