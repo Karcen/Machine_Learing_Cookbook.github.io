@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Machine Learning Cookbook</title>
-    
     <script>
     window.MathJax = {
       tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
@@ -43,10 +42,34 @@
             --code-bg: #020617;
         }
 
-        body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+        /* 调整body为垂直flex布局 */
+        body { 
+            margin: 0; 
+            font-family: 'Inter', system-ui, sans-serif; 
+            background: var(--bg-body); 
+            color: var(--text-main); 
+            display: flex; 
+            flex-direction: column; /* 垂直排列子元素 */
+            height: 100vh; 
+            overflow: hidden; 
+        }
+
+        /* 包裹nav和main的容器，占满中间空间 */
+        .content-wrap {
+            display: flex;
+            flex: 1; /* 占满body剩余高度 */
+            overflow: hidden;
+        }
 
         /* Navigation */
-        nav { width: 260px; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+        nav { 
+            width: 260px; 
+            background: var(--bg-sidebar); 
+            border-right: 1px solid var(--border); 
+            display: flex; 
+            flex-direction: column; 
+            flex-shrink: 0; 
+        }
         .nav-header { padding: 20px; border-bottom: 1px solid var(--border); }
         .nav-header h1 { margin: 0; font-size: 1.2rem; color: var(--accent); font-weight: 800; }
         .nav-content { flex: 1; overflow-y: auto; padding-top: 10px; }
@@ -82,43 +105,58 @@
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         @media(max-width:900px){ .grid-2 { grid-template-columns: 1fr; } }
         
+        /* 页脚样式：左对齐、底部左下角 */
+        .footer {
+            text-align: left; /* 左对齐 */
+            padding: 1rem 2rem; /* 内边距适配 */
+            color: var(--text-sub); /* 跟随主题文本颜色 */
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border); /* 跟随主题边框色 */
+            background: var(--bg-body); /* 跟随主题背景 */
+        }
     </style>
 </head>
 <body>
+    <!-- 包裹导航和主内容的容器 -->
+    <div class="content-wrap">
+        <nav>
+            <div class="nav-header">
+                <h1>🍳 ML Cookbook</h1>
+            </div>
+            <div class="nav-content">
+                <div class="group-title">核心原理 (Theory)</div>
+                <div class="nav-item active" onclick="router.load('theory_loss')">📉 Loss & 过拟合演示</div>
+                <div class="nav-item" onclick="router.load('theory_reg')">🛡️ 正则化与复杂度</div>
 
-<nav>
-    <div class="nav-header">
-        <h1>🍳 ML Cookbook</h1>
+                <div class="group-title">回归 (Regression)</div>
+                <div class="nav-item" onclick="router.load('reg_linear')">📏 简单线性回归</div>
+                <div class="nav-item" onclick="router.load('reg_poly')">🎢 外推灾难 (Extrapolation)</div>
+                <div class="nav-item" onclick="router.load('reg_vs')">⚔️ 线性 vs 非线性</div>
+
+                <div class="group-title">分类 (Classification)</div>
+                <div class="nav-item" onclick="router.load('cls_logistic')">🚀 逻辑回归 (梯度下降)</div>
+                <div class="nav-item" onclick="router.load('cls_knn')">🔴 KNN (K=2)</div>
+
+                <div class="group-title">聚类 (Clustering)</div>
+                <div class="nav-item" onclick="router.load('clu_kmeans')">🧩 K-Means</div>
+            </div>
+        </nav>
+
+        <main>
+            <div class="header">
+                <h2 id="pageTitle" style="margin:0; font-size:1.1rem;"></h2>
+                <button class="btn-outline" onclick="toggleTheme()">🌗 切换模式</button>
+            </div>
+            <div id="app" class="container"></div>
+        </main>
     </div>
-    <div class="nav-content">
-        <div class="group-title">核心原理 (Theory)</div>
-        <div class="nav-item active" onclick="router.load('theory_loss')">📉 Loss & 过拟合演示</div>
-        <div class="nav-item" onclick="router.load('theory_reg')">🛡️ 正则化与复杂度</div>
 
-        <div class="group-title">回归 (Regression)</div>
-        <div class="nav-item" onclick="router.load('reg_linear')">📏 简单线性回归</div>
-        <div class="nav-item" onclick="router.load('reg_poly')">🎢 外推灾难 (Extrapolation)</div>
-        <div class="nav-item" onclick="router.load('reg_vs')">⚔️ 线性 vs 非线性</div>
-
-        <div class="group-title">分类 (Classification)</div>
-        <div class="nav-item" onclick="router.load('cls_logistic')">🚀 逻辑回归 (梯度下降)</div>
-        <div class="nav-item" onclick="router.load('cls_knn')">🔴 KNN (K=2)</div>
-
-        <div class="group-title">聚类 (Clustering)</div>
-        <div class="nav-item" onclick="router.load('clu_kmeans')">🧩 K-Means</div>
-    </div>
-</nav>
-
-<main>
-    <div class="header">
-        <h2 id="pageTitle" style="margin:0; font-size:1.1rem;"></h2>
-        <button class="btn-outline" onclick="toggleTheme()">🌗 切换模式</button>
-    </div>
-    <div id="app" class="container"></div>
-</main>
+    <!-- 页脚：位于页面底部左下角 -->
+    <footer class="footer">
+        由 Karcen Zheng 制作，<a href="https://karcen.github.io/zhengjiacheng.github.io/" target="_blank">联系我</a>
+    </footer>
 
 <script>
-
 // ==========================================
 // 1. 页面内容
 // ==========================================
